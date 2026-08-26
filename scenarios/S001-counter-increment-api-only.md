@@ -35,10 +35,17 @@ counter increment, defined below.
 - Workload: the measured operation is a single increment of a `Counter`
   instrument named `house.energy.consumed` by `1`, with the same attribute
   values on every call.
-- Attributes: each call constructs and passes the same set of three string
-  attributes inline (no hoisting/caching of an attribute container across
-  iterations), matching how application code typically issues measurements
-  with per-call attribute values:
+- Attributes: each call builds and passes the attribute set inline, without
+  hoisting or caching the attribute container across iterations. This models
+  the common case where a library cannot pre-build the set because the values
+  come from per-call context (for example `http.route`, `http.request.method`,
+  or `db.operation`). The same three string attribute values are used on every
+  call solely to keep the benchmark deterministic - not as a claim that real
+  attribute values are constant. Where a language lets attribute *keys* be
+  declared ahead of time (for example Java's `AttributeKey`), caching the keys
+  is allowed and encouraged; it is the value-carrying container that must be
+  constructed per call. A variant that reuses a pre-built attribute set is a
+  separate scenario, not S001. The attribute values are:
   - `house.room` = `"living_room"`
   - `house.device` = `"thermostat"`
   - `house.action` = `"set_temperature"`
