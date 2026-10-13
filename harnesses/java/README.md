@@ -28,11 +28,12 @@ benchmark run.
 ## Toolchain
 
 The JDK is provisioned by the workflow with
-[`actions/setup-java`](https://github.com/actions/setup-java) (Temurin 25, the
-newest LTS) and the [Gradle wrapper](gradlew) pins the Gradle version, so
+[`actions/setup-java`](https://github.com/actions/setup-java) (Temurin) and the
+[Gradle wrapper](gradlew) pins the Gradle version, so
 results are reproducible and comparable release-over-release regardless of what
-the CI runner ships. The `java` toolchain block in [`build.gradle`](build.gradle)
-pins the language version. Bump both to re-baseline on a newer JDK.
+the CI runner ships. Both workflows and the Gradle Java toolchain read the JDK
+major version from [`.java-version`](.java-version). Update that file to
+re-baseline on a newer JDK.
 
 ## Framework
 
