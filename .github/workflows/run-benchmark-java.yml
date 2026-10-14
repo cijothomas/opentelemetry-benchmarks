@@ -72,17 +72,19 @@ jobs:
           EXTRA: ${{ steps.meta.outputs.extra }}
         run: |
           report="build/results/jmh/result.json"
-          score=$(jq '.[0].primaryMetric.score' "$report")
-          error=$(jq '.[0].primaryMetric.scoreError' "$report")
-          alloc=$(jq '[.[0].secondaryMetrics | to_entries[]
-            | select(.key | endswith("gc.alloc.rate.norm")) | .value.score]
-            | first // 0' "$report")
-          jq -n --arg extra "$EXTRA" --argjson v "$score" --argjson e "$error" --argjson a "$alloc" \
-            '[
+          jq -e --arg extra "$EXTRA" '
+            def required_score:
+              if type == "number" and . >= 0 and (isinfinite | not) then .
+              else error("Missing or invalid JMH score") end;
+            .[0]
+            | (.primaryMetric.score | required_score) as $v
+            | (.secondaryMetrics["gc.alloc.rate.norm"].score | required_score) as $a
+            | .primaryMetric.scoreError as $e
+            | [
               ({name:"counter increment", unit:"ns", value:$v, extra:$extra})
-              + (if ($e == null or ($e | isnan)) then {} else {range:("\u00b1 " + ($e | tostring))} end),
+              + (if ($e | type) == "number" then {range:("\u00b1 " + ($e | tostring))} else {} end),
               {name:"counter increment allocations", unit:"B/op", value:$a, extra:$extra}
-            ]' > result.json
+            ]' "$report" > result.json
           cat result.json
 
       - name: Publish to dashboard

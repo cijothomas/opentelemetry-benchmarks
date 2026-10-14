@@ -25,9 +25,7 @@ jmh {
     timeOnIteration = project.findProperty('jmhTimeOnIteration') ?: '1s'
     benchmarkMode = ['avgt']
     timeUnit = 'ns'
-    // The gc profiler reports allocations/op (gc.alloc.rate.norm), which the
-    // publish workflow turns into the "B/op" data point (parity with .NET's
-    // MemoryDiagnoser).
+    // The gc profiler reports allocated bytes/op (gc.alloc.rate.norm).
     profilers = ['gc']
     // Fail the build rather than silently publishing data from a broken run.
     failOnError = true
@@ -36,7 +34,7 @@ jmh {
     resultsFile = layout.buildDirectory.file('results/jmh/result.json').get().asFile
 }
 
-// Prints the tracked OpenTelemetry API version the build resolves, so the
+// Prints the configured OpenTelemetry API version, so the
 // benchmark workflow can label the published data point without re-parsing
 // this file.
 tasks.register('printOtelApiVersion') {

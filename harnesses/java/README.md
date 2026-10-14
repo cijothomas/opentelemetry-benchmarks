@@ -9,13 +9,11 @@ The cost of a single `LongCounter.add` against the
 [`opentelemetry-api`](https://central.sonatype.com/artifact/io.opentelemetry/opentelemetry-api)
 artifact with **no SDK registered**. With only the API artifact present,
 `GlobalOpenTelemetry.getMeter(...)` returns the API's built-in no-op meter, so
-the call hits the no-op path - exactly the cost a library pays for being
-instrumented when the application has not configured an SDK.
+the measured operation includes the no-op call and attribute construction.
 
 Per S001, the three-attribute set is built on every call (the attribute keys
 are cached as static `AttributeKey`s, but the `Attributes` container is not).
-Even on the no-op path this allocates in Java - unlike .NET's stack-based
-`TagList` - so the harness reports `allocations/op` alongside `ns/op`.
+The harness reports allocated bytes per operation (`B/op`) alongside `ns/op`.
 
 "API-only" for Java means depending on `opentelemetry-api` only, not
 `opentelemetry-sdk`. The recorded version against each data point is the
@@ -29,11 +27,10 @@ benchmark run.
 
 The JDK is provisioned by the workflow with
 [`actions/setup-java`](https://github.com/actions/setup-java) (Temurin) and the
-[Gradle wrapper](gradlew) pins the Gradle version, so
-results are reproducible and comparable release-over-release regardless of what
-the CI runner ships. Both workflows and the Gradle Java toolchain read the JDK
-major version from [`.java-version`](.java-version). Update that file to
-re-baseline on a newer JDK.
+[Gradle wrapper](gradlew) pins the Gradle version. Both workflows and the Gradle
+Java toolchain read the JDK major version from [`.java-version`](.java-version).
+This does not pin the JDK patch version or runner hardware; published results
+include the runtime version and environment metadata to help interpret changes.
 
 ## Framework
 
@@ -49,6 +46,9 @@ attribute construction the scenario requires on every call.
 
 ## Run locally
 
+Install a JDK matching [`.java-version`](.java-version) and set `JAVA_HOME` to
+its installation directory. Then, from the repository root:
+
 ```sh
 cd harnesses/java
 ./gradlew jmh
@@ -57,4 +57,5 @@ cd harnesses/java
 The mean is read from the `avgt` primary metric in
 `build/results/jmh/result.json` and published to the dashboard as `ns/op`
 (smaller is better). The JMH `gc` profiler also records `gc.alloc.rate.norm`,
-published as `allocations/op` (`B/op`), matching what the .NET harness reports.
+published as allocated bytes per operation (`B/op`), matching what the .NET
+harness reports. This is not a count of allocated objects.
