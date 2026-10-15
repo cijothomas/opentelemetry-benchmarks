@@ -33,7 +33,7 @@ view is also available at
 
 ## Benchmark execution
 
-The .NET and Rust publishing workflows run in digest-pinned Ubuntu containers
+The benchmark publishing workflows run in digest-pinned Ubuntu containers
 on the shared OpenTelemetry bare-metal runner. Each harness's toolchain file
 selects its compiler or SDK version. PR build and smoke checks use GitHub-hosted
 runners.
